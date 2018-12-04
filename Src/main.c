@@ -130,6 +130,7 @@ extern uint8_t NXT_BIT;
  			  	  //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
   }
+}
 
  void SendColor(uint32_t Red,uint32_t Green,uint32_t Blue){
  	 while(NXT_BIT != 0){

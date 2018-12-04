@@ -217,10 +217,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) //HÄFTIG
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 	  NXT_BIT = 0;
       return;
-  }else if(NXT_BIT == 2){
-	  NXT_BIT = 0;
   }
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+  NXT_BIT = 0;
   return;
 
 }
