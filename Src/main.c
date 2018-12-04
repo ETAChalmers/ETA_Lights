@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
+  * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -46,6 +46,8 @@
 /* USER CODE BEGIN Includes */
 #include "globals.h"
 /* USER CODE END Includes */
+
+/* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -115,10 +117,26 @@ extern uint8_t NXT_BIT;
  	 	}
  }
 
- void SetColor(uint32_t Red,uint32_t Green,uint32_t Blue){
-	 Bangbang(DataHeaderFrameMask,DataHeaderFrame);
+ void BangReg(uint32_t Mask, uint32_t Data){
+  for( uint32_t a = Mask; a > 0; a >>= 1 ){
+
+ 		  while(NXT_BIT != 0){
+ 		  }
+ 			  if (Data & a)
+ 			  	  NXT_BIT = 1;
+ 			  	  //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+ 		  	  else
+ 			  	  NXT_BIT = 2;
+ 			  	  //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+
+  }
+
+ void SendColor(uint32_t Red,uint32_t Green,uint32_t Blue){
+	 NXT_BIT = 2;
 	 Bangbang(DataFrameMask,Red);
+	 NXT_BIT = 2;
 	 Bangbang(DataFrameMask,Green);
+	 NXT_BIT = 2;
 	 Bangbang(DataFrameMask,Blue);
 
 
@@ -167,20 +185,22 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
+  BangReg(ResetFrameMask,ResetFrame);
+    HAL_Delay(2);
     Bangbang(SyncFrameMask,SyncFrame);
 	HAL_Delay(3);
 
   while (1)
   {
+
 	  for (int k=0; k<360; k++){
-	  SetColor(lights[(k+120)%360]<<3,lights[k]<<3,lights[(k+240)%360]<<3);
-	  HAL_Delay(0xFF);
+		  BangReg(DataHeaderFrameMask,DataHeaderFrame);
+		  	  for(int i = 0; i < 91; i++)
+		  	  SendColor(lights[(k+120)%360]<<3,lights[k]<<3,lights[(k+240)%360]<<3);
+	  	  HAL_Delay(30);
 	  }
-    Bangbang(ResetFrameMask, ResetFrame);
-	HAL_Delay(3);
-    Bangbang(SyncFrameMask,SyncFrame);
-	HAL_Delay(3);
+
+
 
   /* USER CODE END WHILE */
 
@@ -200,13 +220,13 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-    /**Configure the main internal regulator output voltage
+    /**Configure the main internal regulator output voltage 
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -222,7 +242,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -236,11 +256,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time
+    /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick
+    /**Configure the Systick 
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -277,7 +297,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
