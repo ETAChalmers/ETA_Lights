@@ -44,7 +44,7 @@ extern uint8_t NXT_BIT;
 extern TIM_HandleTypeDef htim4;
 
 /******************************************************************************/
-/*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
+/*            Cortex-M4 Processor Interruption and Exception Handlers         */
 /******************************************************************************/
 
 /**
@@ -215,11 +215,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) //HÄFTIG
   UNUSED(htim);
   if(NXT_BIT==1){
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-	  NXT_BIT = NXT_BIT - 1;
+	  NXT_BIT = 0;
+      return;
   }else if(NXT_BIT == 2){
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-	  NXT_BIT = NXT_BIT - 2;
+	  NXT_BIT = 0;
   }
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
   return;
 
 }
