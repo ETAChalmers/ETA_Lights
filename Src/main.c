@@ -59,8 +59,8 @@
 
   uint32_t DataHeaderFrame = 0x7FFF2;     // 111111111111111 0010
   uint32_t DataHeaderFrameMask = 0x40000; // 100000000000000 0000
-  uint32_t DataFrameMask = 0x1000;        // 1000000000000
-  uint32_t DataFilled    = 0b0111111111111;
+  uint32_t DataFrameMask = 0b1000000000000;//0x1000;        // 1000000000000
+  uint32_t DataFilled    = 0b011111111111;
   uint32_t DataEmpty     = 0b0000000000000;
 
   const uint8_t lights[360]={
@@ -133,17 +133,8 @@ extern uint8_t NXT_BIT;
 }
 
  void SendColor(uint32_t Red,uint32_t Green,uint32_t Blue){
- 	 while(NXT_BIT != 0){
- 	 }
-	 NXT_BIT = 2;
 	 Bangbang(DataFrameMask,Red);
- 	 while(NXT_BIT != 0){
- 	 }
-	 NXT_BIT = 2;
 	 Bangbang(DataFrameMask,Green);
-     while(NXT_BIT != 0){
- 	 }
-	 NXT_BIT = 2;
 	 Bangbang(DataFrameMask,Blue);
 
 
@@ -192,20 +183,29 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  BangReg(ResetFrameMask,ResetFrame);
-    HAL_Delay(2);
-    BangReg(SyncFrameMask,SyncFrame);
-	HAL_Delay(3);
+
 
   while (1)
   {
+	  Bangbang(ResetFrameMask,ResetFrame);
+	  HAL_Delay(3);
+	  Bangbang(SyncFrameMask,SyncFrame);
+	  HAL_Delay(2);
 
 	  for (int k=0; k<360; k++){
-		  BangReg(DataHeaderFrameMask,DataHeaderFrame);
-		  	  for(int i = 0; i < 91; i++)
-		  	  SendColor(lights[(k+120)%360]<<3,lights[k]<<3,lights[(k+240)%360]<<3);
-	  	  HAL_Delay(30);
+		  if(!(k%90)){
+
+			  Bangbang(ResetFrameMask,ResetFrame);
+			  	  HAL_Delay(1);
+		  }
+		  Bangbang(SyncFrameMask,SyncFrame);
+		  	  HAL_Delay(4);
+		  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
+		  for(int i = 0; i < 91; i++)
+			  SendColor(lights[(k+120)%360]<<3,lights[k]<<3,lights[(k+240)%360]<<3);
+
 	  }
+
 
 
 
