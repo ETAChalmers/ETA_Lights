@@ -187,22 +187,38 @@ int main(void)
 
   while (1)
   {
-	  Bangbang(ResetFrameMask,ResetFrame);
-	  HAL_Delay(3);
-	  Bangbang(SyncFrameMask,SyncFrame);
-	  HAL_Delay(2);
+	  for (int k=0; k<360; k++){
+		  for (int q=0; q<40; q++){
+			  Bangbang(ResetFrameMask,ResetFrame);
+			  HAL_Delay(1);
+			  Bangbang(SyncFrameMask,SyncFrame);
+			  HAL_Delay(3);
+			  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
+			  SendColor(lights[(k)%360]<<3,lights[k+120]<<3,lights[(k+240)%360]<<3);
+			  HAL_Delay(1);
+			  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
+			  HAL_Delay(20);
+		  }
+	  }
 
+/*
 	  for (int k=0; k<360; k++){
 		  Bangbang(ResetFrameMask,ResetFrame);
-		  HAL_Delay(1);
-		  Bangbang(SyncFrameMask,SyncFrame);
-		  	  HAL_Delay(1);
+		  	  BangReg(DataEmpty,DataFrameMask);
+		  	  Bangbang(SyncFrameMask,SyncFrame);
+		  	  HAL_Delay(3);
+
 		  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
 		  //for(int i = 0; i < 91; i++)
 		  SendColor(lights[(k)%360]<<3,lights[k+120]<<3,lights[(k+240)%360]<<3);
-		  HAL_Delay(4);
+		  HAL_Delay(1);
 		  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
-	  }
+
+		  HAL_Delay(40);
+		  }
+		  */
+
+
 
 
 
