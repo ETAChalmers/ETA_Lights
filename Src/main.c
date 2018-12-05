@@ -192,9 +192,11 @@ int main(void)
 			  Bangbang(ResetFrameMask,ResetFrame);
 			  HAL_Delay(1);
 			  Bangbang(SyncFrameMask,SyncFrame);
-			  HAL_Delay(3);
+			  HAL_Delay(7);
 			  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
-			  SendColor(lights[(k)%360]<<3,lights[k+120]<<3,lights[(k+240)%360]<<3);
+			  for(int i = 0; i < 255; i++)
+			  //SendColor(lights[(k)%360]<<3,lights[k+120]<<3,lights[(k+240)%360]<<3);
+			  SendColor(DataFilled,0b001011111111,DataEmpty);
 			  HAL_Delay(1);
 			  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
 			  HAL_Delay(20);
