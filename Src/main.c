@@ -61,7 +61,15 @@
   uint32_t DataHeaderFrameMask = 0x40000; // 100000000000000 0000
   uint32_t DataFrameMask = 0b1000000000000;//0x1000;        // 1000000000000
   uint32_t DataFilled    = 0b011111111111;
-  uint32_t DataEmpty     = 0b0000000000000;
+  uint32_t DataEmpty     = 0b000000000000;
+  uint8_t Buttons = 0x00;
+  const uint16_t colors[24]={
+		  0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b000000000000,0b011111111111,0b011111111111,0b011111111111,
+		  0b011111111111,0b000000000000,0b000000000000,0b011111111111,0b000000000000,0b000000000000,0b001011111111,0b001101111111,
+		  0b011111111111,0b011111111111,0b000000000000,0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b011111111111};
+
+
+
 
   const uint8_t lights[360]={
 		     0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 17, 18, 20, 22, 24, 26, 28, 30, 32, 35, 37, 39,
@@ -187,21 +195,46 @@ int main(void)
 
   while (1)
   {
-	  for (int k=0; k<360; k++){
-		  for (int q=0; q<40; q++){
-			  Bangbang(ResetFrameMask,ResetFrame);
-			  HAL_Delay(1);
-			  Bangbang(SyncFrameMask,SyncFrame);
-			  HAL_Delay(7);
-			  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
-			  for(int i = 0; i < 255; i++)
-			  //SendColor(lights[(k)%360]<<3,lights[k+120]<<3,lights[(k+240)%360]<<3);
-			  SendColor(DataFilled,0b000101111111,DataEmpty);
-			  HAL_Delay(1);
-			  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
-			  HAL_Delay(20);
+	  if(HAL_GPIO_ReadPin(D2_GPIO_Port,D2_Pin)){
+		  //HAL_GPIO_WritePin(FOO_GPIO_Port, FOO_Pin, GPIO_PIN_RESET);
+		  for (int k=0; k<360; k++){
+			  for (int q=0; q<40; q++){
+				  Bangbang(ResetFrameMask,ResetFrame);
+				  HAL_Delay(1);
+				  Bangbang(SyncFrameMask,SyncFrame);
+				  HAL_Delay(7);
+				  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
+				  for(int i = 0; i < 255; i++)
+				  //SendColor(lights[(k)%360]<<3,lights[k+120]<<3,lights[(k+240)%360]<<3);
+				  //SendColor(DataFilled,0b000101111111,DataEmpty);
+				  SendColor(colors[Buttons],colors[Buttons+8],colors[Buttons+16]);
+				  HAL_Delay(1);
+				  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
+				  HAL_Delay(20);
+			  }
 		  }
 	  }
+
+	  if(HAL_GPIO_ReadPin(D10_GPIO_Port,D10_Pin)){
+		  	  Buttons =(Buttons | 0b00000100);
+	  } else{
+	  		  Buttons =(Buttons & 0b11111011);
+	  }
+	  if(HAL_GPIO_ReadPin(D11_GPIO_Port,D11_Pin)){
+	  		  Buttons =(Buttons | 0b00000010);
+	  }else{
+	  		  Buttons =(Buttons & 0b11111101);
+	  }
+	  if(HAL_GPIO_ReadPin(D12_GPIO_Port,D12_Pin)){
+	  		  Buttons =(Buttons | 0b00000001);
+	  }else{
+	  		  Buttons =(Buttons & 0b11111110);
+	  }
+
+
+
+
+
 
 /*
 	  for (int k=0; k<360; k++){
