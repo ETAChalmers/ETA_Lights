@@ -62,7 +62,7 @@
   uint32_t DataFrameMask = 0b1000000000000;//0x1000;        // 1000000000000
   uint32_t DataFilled    = 0b011111111111;
   uint32_t DataEmpty     = 0b000000000000;
-  uint8_t Buttons = 0x00;
+  uint8_t volatile Buttons = 0x00;
   const uint16_t colors[24]={
 		  0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b000000000000,0b011111111111,0b011111111111,0b011111111111,
 		  0b011111111111,0b000000000000,0b000000000000,0b011111111111,0b000000000000,0b000000000000,0b001011111111,0b001101111111,
@@ -159,7 +159,6 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -196,8 +195,8 @@ int main(void)
   while (1)
   {
 	  if(HAL_GPIO_ReadPin(D2_GPIO_Port,D2_Pin)){
+		  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
 		  //HAL_GPIO_WritePin(FOO_GPIO_Port, FOO_Pin, GPIO_PIN_RESET);
-		  for (int k=0; k<360; k++){
 			  for (int q=0; q<40; q++){
 				  Bangbang(ResetFrameMask,ResetFrame);
 				  HAL_Delay(1);
@@ -212,7 +211,7 @@ int main(void)
 				  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
 				  HAL_Delay(20);
 			  }
-		  }
+
 	  }
 
 	  if(HAL_GPIO_ReadPin(D10_GPIO_Port,D10_Pin)){
@@ -230,6 +229,8 @@ int main(void)
 	  }else{
 	  		  Buttons =(Buttons & 0b11111110);
 	  }
+	  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_RESET);
+
 
 
 
