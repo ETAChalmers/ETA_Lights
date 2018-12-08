@@ -59,16 +59,16 @@
 
   uint32_t DataHeaderFrame = 0x7FFF2;     // 111111111111111 0010
   uint32_t DataHeaderFrameMask = 0x40000; // 100000000000000 0000
-  uint32_t DataFrameMask = 0b1000000000000;//0x1000;        // 1000000000000
-  uint32_t DataFilled    = 0b011111111111;
+  uint32_t DataFrameMask = 0b1000000000000;//0x1000;        // 1000000000000 //the Dataframe size must be +1 the size of the data
+  uint32_t DataFilled    = 0b011111111111; //NOTE the first bit MUST be a zero
   uint32_t DataEmpty     = 0b000000000000;
   uint8_t volatile Buttons = 0x00;
   const uint16_t colors[24]={
-		  0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b000000000000,0b011111111111,0b011111111111,0b011111111111,
-		  0b011111111111,0b000000000000,0b000000000000,0b011111111111,0b000000000000,0b000000000000,0b001011111111,0b001101111111,
-		  0b011111111111,0b011111111111,0b000000000000,0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b011111111111};
-
-
+		  0b011111111111,0b011111111111,0b011111111111,0b00101111111,0b000000000000,0b011111111111,0b011111111111,0b001001111111,//R
+		  0b011111111111,0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b000000000000,0b001011111111,0b011111111111,//G
+		  0b000000000000,0b000000000000,0b011111111111,0b000001000000,0b011111111111,0b011111111111,0b000000000000,0b000000000000};//B
+  	  	  //0             1              2             3                4             5				6				7
+  	  	  //				001							111
 
 
   const uint8_t lights[360]={
@@ -101,6 +101,8 @@ void SystemClock_Config(void);
 extern uint8_t NXT_BIT;
 
  void Bangbang(uint32_t Mask, uint32_t Data){
+	 //This function manchesterencodes a datapacket sent to it and tells a timer function
+	 //to send bits
  for( uint32_t a = Mask; a > 0; a >>= 1 ){
 
 		  while(NXT_BIT != 0){
@@ -126,6 +128,7 @@ extern uint8_t NXT_BIT;
  }
 
  void BangReg(uint32_t Mask, uint32_t Data){
+	 //same as BangBang exept it does not enocde
   for( uint32_t a = Mask; a > 0; a >>= 1 ){
 
  		  while(NXT_BIT != 0){
@@ -140,7 +143,20 @@ extern uint8_t NXT_BIT;
   }
 }
 
- void SendColor(uint32_t Red,uint32_t Green,uint32_t Blue){
+ void Sync(uint8_t time){//Syncs LEDs
+	 Bangbang(ResetFrameMask,ResetFrame);
+	 //Sends a resetframe to the LEDs, this must be done after each poweron cyckle or just random times
+	 HAL_Delay(1);
+	 Bangbang(SyncFrameMask,SyncFrame);
+	 //Tells the LEDs what position in the order they are, Technically not needed this often
+	 HAL_Delay(time); //A delay dependent on the number of LEDs in series, the frame must propagate though the entire chain
+
+
+ }
+
+ void SendColor(uint32_t Red,uint32_t Green,uint32_t Blue){ //accepts red,green,blue
+	 //MUST be preceeded with a "Bangbang(DataHeaderFrameMask,DataHeaderFrame);"
+	 //in a series of databytes
 	 Bangbang(DataFrameMask,Red);
 	 Bangbang(DataFrameMask,Green);
 	 Bangbang(DataFrameMask,Blue);
@@ -194,68 +210,76 @@ int main(void)
 
   while (1)
   {
+	  //PLEACE NOTE 'Buttons' is erased after each itteration hence
+	  switch(HAL_GPIO_ReadPin(D10_GPIO_Port,D10_Pin)){
+	  case GPIO_PIN_SET:
+		  Buttons =0x00;
+		  break;
+
+	  case GPIO_PIN_RESET:
+		  Buttons =0x01;
+		  break;
+	  default:
+		  break;
+	  }
+
+	  switch(HAL_GPIO_ReadPin(D11_GPIO_Port,D11_Pin)){
+	  	  case GPIO_PIN_SET:
+	  		Buttons =(Buttons | 0b00000010);
+	  		  break;
+	  	  default:
+	  		  break;
+	  	  }
+	  switch(HAL_GPIO_ReadPin(D12_GPIO_Port,D12_Pin)){
+	  	  	  case GPIO_PIN_SET:
+	  	  		Buttons =(Buttons | 0b00000100);
+	  	  		  break;
+	  	  	  default:
+	  	  		  break;
+	  	  	  }
+
 	  if(HAL_GPIO_ReadPin(D2_GPIO_Port,D2_Pin)){
 		  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
-		  //HAL_GPIO_WritePin(FOO_GPIO_Port, FOO_Pin, GPIO_PIN_RESET);
-			  for (int q=0; q<40; q++){
-				  Bangbang(ResetFrameMask,ResetFrame);
-				  HAL_Delay(1);
-				  Bangbang(SyncFrameMask,SyncFrame);
-				  HAL_Delay(7);
-				  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
-				  for(int i = 0; i < 255; i++)
-				  //SendColor(lights[(k)%360]<<3,lights[k+120]<<3,lights[(k+240)%360]<<3);
-				  //SendColor(DataFilled,0b000101111111,DataEmpty);
-				  SendColor(colors[Buttons],colors[Buttons+8],colors[Buttons+16]);
-				  HAL_Delay(1);
-				  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
-				  HAL_Delay(20);
+
+
+		  if(Buttons==0b00000111){
+			  for (int q=0; q<20; q++){
+			  				  Sync(7);
+
+			  				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //Tells the LEDs that data is comming, also toggles the color of the LEDs
+			  				  for(int i = 0; i < 128; i++){ //One package in series for each LED
+			  				  SendColor(0b011111111111,0b011111111111,0b000000000000);
+			  				  SendColor(0b011111111111,0b000000000000,0b000000000000);
+			  				  }
+
+			  				  HAL_Delay(1);
+			  				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //applies the color of the LEDs
+			  				  //no data is sent but that is ok
+			  				  HAL_Delay(20);
 			  }
 
-	  }
-
-	  if(HAL_GPIO_ReadPin(D10_GPIO_Port,D10_Pin)){
-		  	  Buttons =(Buttons | 0b00000100);
-	  } else{
-	  		  Buttons =(Buttons & 0b11111011);
-	  }
-	  if(HAL_GPIO_ReadPin(D11_GPIO_Port,D11_Pin)){
-	  		  Buttons =(Buttons | 0b00000010);
-	  }else{
-	  		  Buttons =(Buttons & 0b11111101);
-	  }
-	  if(HAL_GPIO_ReadPin(D12_GPIO_Port,D12_Pin)){
-	  		  Buttons =(Buttons | 0b00000001);
-	  }else{
-	  		  Buttons =(Buttons & 0b11111110);
-	  }
-	  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_RESET);
+		  }else{
 
 
+//CORE CODE
+			  for (int q=0; q<20; q++){//in this application sending 20 identical packages is great,
+				  // it makes sure for a steady color with few dead pixels when transmission is done
+				  Sync(7);
 
+				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //Tells the LEDs that data is comming, also toggles the color of the LEDs
+				  for(int i = 0; i < 255; i++) //One package in series for each LED
+				  SendColor(colors[Buttons],colors[Buttons+8],colors[Buttons+16]); //Color-data
 
-
-
-
-/*
-	  for (int k=0; k<360; k++){
-		  Bangbang(ResetFrameMask,ResetFrame);
-		  	  BangReg(DataEmpty,DataFrameMask);
-		  	  Bangbang(SyncFrameMask,SyncFrame);
-		  	  HAL_Delay(3);
-
-		  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
-		  //for(int i = 0; i < 91; i++)
-		  SendColor(lights[(k)%360]<<3,lights[k+120]<<3,lights[(k+240)%360]<<3);
-		  HAL_Delay(1);
-		  Bangbang(DataHeaderFrameMask,DataHeaderFrame);
-
-		  HAL_Delay(40);
+				  HAL_Delay(1);
+				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //applies the color of the LEDs
+				  //no data is sent but that is ok
+				  HAL_Delay(20);
+			  }
 		  }
-		  */
+	  }
+//Core code done
 
-
-
+	  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_RESET); //Debug
 
 
   /* USER CODE END WHILE */
