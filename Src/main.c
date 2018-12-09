@@ -64,12 +64,16 @@
   uint32_t DataEmpty     = 0b000000000000;
   uint8_t volatile Buttons = 0x00;
   const uint16_t colors[24]={
-		  0b011111111111,0b011111111111,0b011111111111,0b00101111111,0b000000000000,0b011111111111,0b011111111111,0b001001111111,//R
-		  0b011111111111,0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b000000000000,0b001011111111,0b011111111111,//G
-		  0b000000000000,0b000000000000,0b011111111111,0b000001000000,0b011111111111,0b011111111111,0b000000000000,0b000000000000};//B
+		  0b011111111111,0b000000000000,0b011111111111,0b000000000000,0b011111111111,0b000000000000,0b011111111111,0b000000000000,//R
+		  0b000000000000,0b011111111111,0b011111111111,0b000000000000,0b000000000000,0b011111111111,0b001011111111,0b000000000000,//G
+		  0b000000000000,0b000000000000,0b000000000000,0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b000000000000};//B
   	  	  //0             1              2             3                4             5				6				7
-  	  	  //				001							111
-
+  	  	  //																								//Number 7 will never show
+  const uint16_t patycolors[9]={
+		  0b011111111111,0b000000000000,0b000000000000,0b011111111111,
+		  0b000000000000,0b011111111111,0b000000000000,0b000000000000,
+		  0b000000000000,0b000000000000,0b011111111111,0b000000000000
+  };
 
   const uint8_t lights[360]={
 		     0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 17, 18, 20, 22, 24, 26, 28, 30, 32, 35, 37, 39,
@@ -210,8 +214,9 @@ int main(void)
 
   while (1)
   {
+	  u_int16_t partystage;//Used in partymode
 	  //PLEACE NOTE 'Buttons' is erased after each itteration hence
-	  switch(HAL_GPIO_ReadPin(D10_GPIO_Port,D10_Pin)){
+	  switch(HAL_GPIO_ReadPin(D11_GPIO_Port,D11_Pin)){
 	  case GPIO_PIN_SET:
 		  Buttons =0x00;
 		  break;
@@ -222,8 +227,8 @@ int main(void)
 	  default:
 		  break;
 	  }
+	  switch(HAL_GPIO_ReadPin(D10_GPIO_Port,D10_Pin)){
 
-	  switch(HAL_GPIO_ReadPin(D11_GPIO_Port,D11_Pin)){
 	  	  case GPIO_PIN_SET:
 	  		Buttons =(Buttons | 0b00000010);
 	  		  break;
@@ -242,24 +247,25 @@ int main(void)
 		  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
 
 
-		  if(Buttons==0b00000111){
-			  for (int q=0; q<20; q++){
-			  				  Sync(7);
 
-			  				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //Tells the LEDs that data is comming, also toggles the color of the LEDs
-			  				  for(int i = 0; i < 128; i++){ //One package in series for each LED
-			  				  SendColor(0b011111111111,0b011111111111,0b000000000000);
-			  				  SendColor(0b011111111111,0b000000000000,0b000000000000);
-			  				  }
+		  if(Buttons==0b00000111){//Party mode
 
-			  				  HAL_Delay(1);
-			  				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //applies the color of the LEDs
-			  				  //no data is sent but that is ok
-			  				  HAL_Delay(20);
-			  }
+		  			  for (int q=0; q<2; q++){
+		  			  				  Sync(7);
 
+		  			  				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //Tells the LEDs that data is comming, also toggles the color of the LEDs
+		  			  				  for(int i = 0; i < 128; i++){ //One package in series for each LED
+		  			  				  SendColor(patycolors[partystage],patycolors[partystage+4],patycolors[partystage+8]);
+		  			  				  SendColor(patycolors[partystage+1],patycolors[partystage+5],patycolors[partystage+9]);
+		  			  				  }
+
+		  			  				  HAL_Delay(1);
+		  			  				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //applies the color of the LEDs
+		  			  				  //no data is sent but that is ok
+		  			  				  HAL_Delay(10);
+		  			  }
+		  		partystage= (partystage+1)%3;
 		  }else{
-
 
 //CORE CODE
 			  for (int q=0; q<20; q++){//in this application sending 20 identical packages is great,
