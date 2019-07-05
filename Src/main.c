@@ -62,6 +62,9 @@
   uint32_t DataFrameMask = 0b1000000000000;//0x1000;        // 1000000000000 //the Dataframe size must be +1 the size of the data
   uint32_t DataFilled    = 0b011111111111; //NOTE the first bit MUST be a zero
   uint32_t DataEmpty     = 0b000000000000;
+  uint8_t LEDnum = 102;//How many LEDs are in series?
+  uint8_t Synctime = 5;// how long is the synctime in (ms)? this is dependent on how many leds you have
+  uint8_t Partyspeed = 900; //A added delay (in ms) to the partymode, change this to change how fast it's blinking
   uint8_t volatile Buttons = 0x00;
   const uint16_t colors[24]={
 		  0b011111111111,0b000000000000,0b011111111111,0b000000000000,0b011111111111,0b000000000000,0b011111111111,0b000000000000,//R
@@ -69,10 +72,10 @@
 		  0b000000000000,0b000000000000,0b000000000000,0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b000000000000};//B
   	  	  //0             1              2             3                4             5				6				7
   	  	  //																								//Number 7 will never show
-  const uint16_t patycolors[9]={
-		  0b011111111111,0b000000000000,0b000000000000,0b011111111111,
-		  0b000000000000,0b011111111111,0b000000000000,0b000000000000,
-		  0b000000000000,0b000000000000,0b011111111111,0b000000000000
+  const uint16_t partycolors[12]={
+		  0b011111111111,0b000000000000,0b000000000000,0b011111111111,  //Note the first column is a copy of the last
+		  0b000000000000,0b000000000000,0b011111111111,0b000000000000,
+		  0b000000000000,0b011111111111,0b000000000000,0b000000000000
   };
 
   const uint8_t lights[360]={
@@ -149,7 +152,7 @@ extern uint8_t NXT_BIT;
 
  void Sync(uint8_t time){//Syncs LEDs
 	 Bangbang(ResetFrameMask,ResetFrame);
-	 //Sends a resetframe to the LEDs, this must be done after each poweron cyckle or just random times
+	 //Sends a resetframe to the LEDs, this must be done after each poweron cycle or just random times
 	 HAL_Delay(1);
 	 Bangbang(SyncFrameMask,SyncFrame);
 	 //Tells the LEDs what position in the order they are, Technically not needed this often
@@ -243,37 +246,37 @@ int main(void)
 	  	  		  break;
 	  	  	  }
 
-	  if(HAL_GPIO_ReadPin(D2_GPIO_Port,D2_Pin)){
+	  if(HAL_GPIO_ReadPin(D2_GPIO_Port,D2_Pin)){//D2 is the "send" switch
 		  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
 
 
 
 		  if(Buttons==0b00000111){//Party mode
 
-		  			  for (int q=0; q<2; q++){
-		  			  				  Sync(7);
+		  			  for (int partystage=0; partystage<2; partystage++){
+		  			  				  Sync(Synctime);
 
 		  			  				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //Tells the LEDs that data is comming, also toggles the color of the LEDs
-		  			  				  for(int i = 0; i < 128; i++){ //One package in series for each LED
-		  			  				  SendColor(patycolors[partystage],patycolors[partystage+4],patycolors[partystage+8]);
-		  			  				  SendColor(patycolors[partystage+1],patycolors[partystage+5],patycolors[partystage+9]);
+		  			  				  for(int i = 0; i < LEDnum/2; i++){ //One package in series for each LED
+		  			  				  SendColor(partycolors[partystage],partycolors[partystage+4],partycolors[partystage+8]);
+		  			  				  SendColor(partycolors[partystage+1],partycolors[partystage+5],partycolors[partystage+9]);
 		  			  				  }
 
 		  			  				  HAL_Delay(1);
 		  			  				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //applies the color of the LEDs
-		  			  				  //no data is sent but that is ok
-		  			  				  HAL_Delay(10);
+		  			  				  //no data is sent but that is ok, the LEDs hate you anyway
+		  			  				  HAL_Delay(Partyspeed);
 		  			  }
 		  		partystage= (partystage+1)%3;
-		  }else{
+		  }else{//Partymode done
 
 //CORE CODE
 			  for (int q=0; q<20; q++){//in this application sending 20 identical packages is great,
 				  // it makes sure for a steady color with few dead pixels when transmission is done
-				  Sync(7);
+				  Sync(Synctime);
 
 				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //Tells the LEDs that data is comming, also toggles the color of the LEDs
-				  for(int i = 0; i < 255; i++) //One package in series for each LED
+				  for(int i = 0; i < LEDnum; i++) //One package in series for each LED
 				  SendColor(colors[Buttons],colors[Buttons+8],colors[Buttons+16]); //Color-data
 
 				  HAL_Delay(1);
@@ -285,7 +288,7 @@ int main(void)
 	  }
 //Core code done
 
-	  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_RESET); //Debug
+	  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_RESET); //Debug, the onboard LED shows if it is sending
 
 
   /* USER CODE END WHILE */
