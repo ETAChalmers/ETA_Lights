@@ -28,13 +28,13 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: LED_lights.elf
+all: ETA_Lights.elf
 
 # Tool invocations
-LED_lights.elf: $(OBJS) $(USER_OBJS) ../STM32F401RETx_FLASH.ld
+ETA_Lights.elf: $(OBJS) $(USER_OBJS) ../STM32F401RETx_FLASH.ld
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU GCC Linker'
-	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -specs=nosys.specs -specs=nano.specs -T"../STM32F401RETx_FLASH.ld" -Wl,-Map=output.map -Wl,--gc-sections -o "LED_lights.elf" @"objects.list" $(USER_OBJS) $(LIBS) -lm
+	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -specs=nosys.specs -specs=nano.specs -T"../STM32F401RETx_FLASH.ld" -Wl,-Map=output.map -Wl,--gc-sections -o "ETA_Lights.elf" @"objects.list" $(USER_OBJS) $(LIBS) -lm
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build
@@ -46,8 +46,8 @@ clean:
 
 post-build:
 	-@echo 'Generating hex and Printing size information:'
-	arm-none-eabi-objcopy -O ihex "LED_lights.elf" "LED_lights.hex"
-	arm-none-eabi-size "LED_lights.elf"
+	arm-none-eabi-objcopy -O ihex "ETA_Lights.elf" "ETA_Lights.hex"
+	arm-none-eabi-size "ETA_Lights.elf"
 	-@echo ' '
 
 .PHONY: all clean dependents

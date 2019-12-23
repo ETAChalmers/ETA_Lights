@@ -59,23 +59,24 @@
   uint32_t DataFrameMask = 0b1000000000000;//0x1000;        // 1000000000000 //the Dataframe size must be +1 the size of the data
   uint32_t DataFilled    = 0b011111111111; //NOTE the first bit MUST be a zero
   uint32_t DataEmpty     = 0b000000000000;
-  uint8_t LEDnum = 102;//How many LEDs are in series?
-  uint8_t Synctime = 3;// how long is the synctime in (ms)? this is dependent on how many leds you have
+  uint8_t LEDnum = 220;//How many LEDs are in series?
+  uint8_t Synctime = 7;// how long is the synctime in (ms)? this is dependent on how many leds you have
+  uint16_t Fadenum = 0;//Used in a fading action
   uint16_t Partyspeed = 255; //A added delay (in ms) to the partymode, change this to change how fast it's blinking
   uint8_t volatile Buttons = 0x00;
   const uint16_t colors[24]={
-		  0b011111111111,0b000000000000,0b011111111111,0b000000000000,0b011111111111,0b000000000000,0b011111111111,0b000000000000,//R
-		  0b000000000000,0b011111111111,0b011111111111,0b000000000000,0b000000000000,0b011111111111,0b001011111111,0b000000000000,//G
-		  0b000000000000,0b000000000000,0b000000000000,0b011111111111,0b011111111111,0b011111111111,0b000000000000,0b000000000000};//B
+		  0b011111111111,0b000000000000,0b011111111111,0b010111111111,0b011111111111,0b000000000000,0b000000000000,0b000000000000,//R
+		  0b000000000000,0b011111111111,0b011111111111,0b001111111111,0b000000000000,0b011111111111,0b000000000000,0b000000000000,//G
+		  0b000000000000,0b000000000000,0b000000000000,0b000000000000,0b011111111111,0b011111111111,0b000000000000,0b000000000000};//B
   	  	  //0             1              2             3                4             5				6				7
-  	  	  //																								//Number 7 will never show
+  	  	  //																								//Number 7 and 6 will never show
   const uint16_t partycolors[12]={
 		  0b011111111111,0b000000000000,0b000000000000,0b011111111111,  //Note the first column is a copy of the last
 		  0b000000000000,0b000000000000,0b011111111111,0b000000000000,
 		  0b000000000000,0b011111111111,0b000000000000,0b000000000000
   };
 
-  const uint8_t lights[360]={
+  const uint8_t lights[361]={
 		     0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 17, 18, 20, 22, 24, 26, 28, 30, 32, 35, 37, 39,
 		    42, 44, 47, 49, 52, 55, 58, 60, 63, 66, 69, 72, 75, 78, 81, 85, 88, 91, 94, 97, 101, 104, 107, 111, 114, 117, 121, 124, 127, 131, 134, 137,
 		   141, 144, 147, 150, 154, 157, 160, 163, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 202, 205, 208, 210, 213, 215, 217, 220, 222, 224, 226, 229,
@@ -86,7 +87,7 @@
 		    11, 9, 8, 7, 6, 5, 4, 3, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 
 
@@ -164,8 +165,6 @@ extern uint8_t NXT_BIT;
 	 Bangbang(DataFrameMask,Red);
 	 Bangbang(DataFrameMask,Green);
 	 Bangbang(DataFrameMask,Blue);
-
-
  }
 
 /* USER CODE END 0 */
@@ -243,11 +242,11 @@ int main(void)
 	  	  		  break;
 	  	  	  }
 
-	  if(HAL_GPIO_ReadPin(D2_GPIO_Port,D2_Pin)){//D2 is the "send" switch
+	  if(!HAL_GPIO_ReadPin(D2_GPIO_Port,D2_Pin)){//D2 is the "send" switch
 		  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
 
 
-
+		  //CORE CODE
 		  if(Buttons==0b00000111){//Party mode
 
 		  			  for (int partystage=0; partystage<3; partystage++){
@@ -265,12 +264,27 @@ int main(void)
 		  			  				  HAL_Delay(Partyspeed);
 		  			  }
 		  		partystage= (partystage+1)%3;
-		  }else{//Partymode done
 
-//CORE CODE
-			  for (int q=0; q<20; q++){//in this application sending 20 identical packages is great,
-				  // it makes sure for a steady color with few dead pixels when transmission is done
-				  Sync(Synctime);
+		  }else if(Buttons==0b00000110){
+
+			  Sync(Synctime);
+			  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //Tells the LEDs that data is comming, also toggles the color of the LEDs
+			  for(int i = 0; i < LEDnum; i++){
+				  SendColor(lights[Fadenum%360],lights[(Fadenum+120)%360],lights[(Fadenum)%360]);
+
+			  }
+			  Fadenum = (Fadenum+1)%360;
+			  HAL_Delay(1);
+			  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //applies the color of the LEDs
+			  //no data is sent but that is ok, the LEDs hate you anyway
+			  HAL_Delay(10);
+
+
+	  	  }else{
+
+
+			  for (int q=0; q<1; q++){//If you want to send a header multiple times, might help if the leds blinks alot
+				  Sync(Synctime);//The synctime is dependent on how maby leds you have
 
 				  Bangbang(DataHeaderFrameMask,DataHeaderFrame); //Tells the LEDs that data is comming, also toggles the color of the LEDs
 				  for(int i = 0; i < LEDnum; i++) //One package in series for each LED
